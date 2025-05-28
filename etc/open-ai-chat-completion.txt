@@ -1,0 +1,51 @@
+ChatCompletion {
+    id=chatcmpl-BaSb6RUVQB7oOIjQsn0Jg5UGDm6kZ,
+    choices=[
+        Choice {
+            finishReason=stop,
+            index=0,
+            logprobs=null,
+            message=ChatCompletionMessage {
+                content=Famous historical structures and monuments mentioned in the content include:
+
+                - The Taj Mahal (mausoleum built by Emperor Shah Jahan)
+                - The Great Wall of China (built to protect against invasions)
+                - The Pyramids of Giza (among the Seven Wonders of the Ancient World),
+                finishReason=stop,
+                refusal=null,
+                role=assistant,
+                annotations=[],
+                audio=,
+                functionCall=,
+                toolCalls=,
+                additionalProperties={}
+            },
+            additionalProperties={}
+        }
+    ],
+    created=1748029436,
+    model=gpt-4.1-2025-04-14,
+    object_=chat.completion,
+    serviceTier=default,
+    systemFingerprint=fp_2d9626f3cf,
+    usage=CompletionUsage {
+        completionTokens=59,
+        promptTokens=139,
+        totalTokens=198,
+        completionTokensDetails=CompletionTokensDetails {
+            acceptedPredictionTokens=0,
+            audioTokens=0,
+            reasoningTokens=0,
+            rejectedPredictionTokens=0,
+            additionalProperties={}
+        },
+        promptTokensDetails=PromptTokensDetails {
+            acceptedPredictionTokens=0,
+            audioTokens=0,
+            cachedTokens=0,
+            additionalProperties={}
+        }, 
+        additionalProperties={}
+    },
+    additionalProperties={}
+}

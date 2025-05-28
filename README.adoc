@@ -1,0 +1,44 @@
+Pinecone-LangChain
+------------------
+
+A demonstration of Pinecone using LangChain.
+
+Things I need
+~~~~~~~~~~~~
+
+* A Pinecone account
+* A Pinecone API key
+* A MongoDB account
+* A MongoDB URI and two MongoDB collections
+** Categories
+** Quickstart
+* An OpenAI API key
+
+Loading Data from the Pinecone QuickStart Application
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The unstructured text is initially placed in the UnstructeredText class in the text package. When more data is added to it, run the following tasks:
+
+ - store
+ - delete
+ - create
+ - load
+
+The store task deletes all the content from the collections in MongoDB and reloads them with the unstructured text in the above-mentioned class.
+
+The delete task deletes the index from Pinecone.
+
+The create task creates the index in Pinecone.
+
+The load task loads the Pinecone index from the MongoDB collections.
+
+Gradle JavaExec Tasks
+~~~~~~~~~~~~~~~~~~~~~
+
+[options="header"]
+|=======================
+|Task Name         |Application Invocation
+|=======================
+
+Current version: 0.1.0.
+~~~~~~~~~~~~~~~~~~~~~~~
