@@ -56,7 +56,7 @@ ext {
 	project.version = '0.1.0'
 	project.description = 'to demonstrate Pinecone using LangChain.'
 	rerankingModel = 'bge-reranker-v2-m3'
-	queryText = ''
+	queryText = 'Tell me about famous monuments and historical structures'
 	useAssertions = '--enable-assertions'
 }
 
@@ -129,6 +129,24 @@ tasks.register('load', JavaExec) {
 			 'app.namespace': namespace,
 			 'app.pineconeApiKey': pineconeApiKey,
 			 'app.operation': 'load']
+	)
+	classpath = sourceSets.main.runtimeClasspath
+	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+	mainClass = javaMainClass
+}
+
+tasks.register('query', JavaExec) {
+	allJvmArgs = [useAssertions, enableNativeAccess] as List<String>
+	systemProperties(
+			['app.embeddingModel': embeddingModel,
+			 'app.indexName': indexName,
+			 'app.mongoDbCollection': mongoDbCollection,
+			 'app.mongoDbName': mongoDbName,
+			 'app.mongoDbUri': mongoDbUri,
+			 'app.namespace': namespace,
+			 'app.pineconeApiKey': pineconeApiKey,
+			 'app.queryText': queryText,
+			 'app.operation': 'query']
 	)
 	classpath = sourceSets.main.runtimeClasspath
 	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))

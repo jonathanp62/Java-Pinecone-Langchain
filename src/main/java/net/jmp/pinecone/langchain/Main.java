@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory;
 
 /// The main application class.
 ///
-/// https://github.com/langchain4j/langchain4j-examples/blob/main/pinecone-example/src/main/java/PineconeEmbeddingStoreExample.java
 /// @version    0.1.0
 /// @since      0.1.0
 public final class Main implements Runnable {
@@ -67,13 +66,13 @@ public final class Main implements Runnable {
 
         switch (operation) {
             case "delete":
-                new Delete().delete(this.getPineconeApiKey().orElseThrow(() -> new IllegalStateException("Pinecone API key not found")));
+                new Delete().operate(this.getPineconeApiKey().orElseThrow(() -> new IllegalStateException("Pinecone API key not found")));
                 break;
             case "load":
-                new Load().load(this.getPineconeApiKey().orElseThrow(() -> new IllegalStateException("Pinecone API key not found")));
+                new Load().operate(this.getPineconeApiKey().orElseThrow(() -> new IllegalStateException("Pinecone API key not found")));
                 break;
             case "query":
-                new Query().query(this.getPineconeApiKey().orElseThrow(() -> new IllegalStateException("Pinecone API key not found")));
+                new Query().operate(this.getPineconeApiKey().orElseThrow(() -> new IllegalStateException("Pinecone API key not found")));
                 break;
             default:
                 this.logger.error("Unknown operation: {}", operation);

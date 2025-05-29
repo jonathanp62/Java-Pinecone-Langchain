@@ -37,12 +37,7 @@ import dev.langchain4j.data.segment.TextSegment;
 
 import dev.langchain4j.model.embedding.EmbeddingModel;
 
-import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
-
 import dev.langchain4j.store.embedding.EmbeddingStore;
-
-import dev.langchain4j.store.embedding.pinecone.PineconeEmbeddingStore;
-import dev.langchain4j.store.embedding.pinecone.PineconeServerlessIndexConfig;
 
 import java.io.IOException;
 
@@ -65,7 +60,7 @@ import org.slf4j.LoggerFactory;
 ///
 /// @version    0.1.0
 /// @since      0.1.0
-final class Load {
+final class Load extends Operation {
     /// The logger.
     private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
@@ -74,10 +69,10 @@ final class Load {
         super();
     }
 
-    /// The load method.
+    /// The operate method.
     ///
     /// @param  pineconeApiKey  java.lang.String
-    void load(final String pineconeApiKey) {
+    void operate(final String pineconeApiKey) {
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(entryWith(pineconeApiKey));
         }
@@ -100,19 +95,14 @@ final class Load {
             this.logger.debug("Namespace         : {}", namespace);
         }
 
-        final EmbeddingModel embeddingModel = new AllMiniLmL6V2EmbeddingModel();
+        final EmbeddingStore<TextSegment> embeddingStore = this.getEmbeddingStore(
+                pineconeApiKey,
+                embeddingModelName,
+                indexName,
+                namespace
+        );
 
-        final EmbeddingStore<TextSegment> embeddingStore = PineconeEmbeddingStore.builder()
-                .apiKey(pineconeApiKey)
-                .index(indexName)
-                .nameSpace(namespace)
-                // The index is created if it doesn't exist
-                .createIndex(PineconeServerlessIndexConfig.builder()
-                        .cloud("AWS")
-                        .region("us-east-1")
-                        .dimension(embeddingModel.dimension())
-                        .build())
-                .build();
+        final EmbeddingModel embeddingModel = this.getEmbeddingModel(embeddingModelName);
 
         final List<String> strings = this.createContent(mongoDbUri, mongoDbName, mongoDbCollection);
 
