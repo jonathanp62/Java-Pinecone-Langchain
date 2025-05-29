@@ -42,6 +42,7 @@ plugins {
 apply plugin: 'net.jmp.gradle.plugin.projectinfo-info'
 
 ext {
+	cohereApiKey = 'etc/cohere-api-key.txt'
 	embeddingModel = 'all-MiniLM-L6-v2'
 	enableNativeAccess = '--enable-native-access=ALL-UNNAMED'
 	indexName = 'langchain'
@@ -56,7 +57,8 @@ ext {
 	project.version = '0.1.0'
 	project.description = 'to demonstrate Pinecone using LangChain.'
 	rerankingModel = 'bge-reranker-v2-m3'
-	queryText = 'Tell me about famous monuments and historical structures'
+	queryText = 'Tell me about famous persons in history and science'
+//	queryText = 'Tell me about famous monuments and historical structures'
 	useAssertions = '--enable-assertions'
 }
 
@@ -74,10 +76,8 @@ repositories {
 }
 
 dependencies {
+	implementation		(libs.bundles.langchain4j)
 	implementation		(libs.bundles.logging)
-	implementation		(libs.dev.langchain4j.langchain4j.core)
-	implementation		(libs.dev.langchain4j.langchain4j.embeddings.all.minilm.l6.v2)
-	implementation		(libs.dev.langchain4j.langchain4j.pinecone)
 	implementation		(libs.org.mongodb.mongodb.driver.sync)
 
 	runtimeOnly			(libs.bundles.logging.runtime)
@@ -140,13 +140,27 @@ tasks.register('query', JavaExec) {
 	systemProperties(
 			['app.embeddingModel': embeddingModel,
 			 'app.indexName': indexName,
-			 'app.mongoDbCollection': mongoDbCollection,
-			 'app.mongoDbName': mongoDbName,
-			 'app.mongoDbUri': mongoDbUri,
 			 'app.namespace': namespace,
 			 'app.pineconeApiKey': pineconeApiKey,
 			 'app.queryText': queryText,
 			 'app.operation': 'query']
+	)
+	classpath = sourceSets.main.runtimeClasspath
+	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+	mainClass = javaMainClass
+}
+
+tasks.register('rag', JavaExec) {
+	allJvmArgs = [useAssertions, enableNativeAccess] as List<String>
+	systemProperties(
+			['app.cohereApiKey': cohereApiKey,
+			 'app.embeddingModel': embeddingModel,
+			 'app.indexName': indexName,
+			 'app.namespace': namespace,
+			 'app.openaiApiKey': openaiApiKey,
+			 'app.pineconeApiKey': pineconeApiKey,
+			 'app.queryText': queryText,
+			 'app.operation': 'rag']
 	)
 	classpath = sourceSets.main.runtimeClasspath
 	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))

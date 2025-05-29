@@ -29,6 +29,7 @@
 .gradle
 .idea
 build
+etc/cohere-api-key.txt
 etc/mongo-db-uri.txt
 etc/open-ai-api-key.txt
 etc/pinecone-api-key.txt

@@ -74,6 +74,9 @@ public final class Main implements Runnable {
             case "query":
                 new Query().operate(this.getPineconeApiKey().orElseThrow(() -> new IllegalStateException("Pinecone API key not found")));
                 break;
+            case "rag":
+                new Rag().operate(this.getPineconeApiKey().orElseThrow(() -> new IllegalStateException("Pinecone API key not found")));
+                break;
             default:
                 this.logger.error("Unknown operation: {}", operation);
         }
