@@ -28,18 +28,6 @@ package net.jmp.pinecone.langchain;
  * SOFTWARE.
  */
 
-import dev.langchain4j.data.embedding.Embedding;
-
-import dev.langchain4j.data.segment.TextSegment;
-
-import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.store.embedding.EmbeddingStore;
-
-import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
-
-import dev.langchain4j.store.embedding.pinecone.PineconeEmbeddingStore;
-import dev.langchain4j.store.embedding.pinecone.PineconeServerlessIndexConfig;
-
 import java.io.IOException;
 
 import java.nio.file.Files;
@@ -74,51 +62,22 @@ public final class Main implements Runnable {
         }
 
         final String operation = System.getProperty("app.operation");
-        final String embeddingModelName = System.getProperty("app.embeddingModel");
-        final String indexName = System.getProperty("app.indexName");
-        final String namespace = System.getProperty("app.namespace");
-        final String rerankingModel = System.getProperty("app.rerankingModel");
-        final String queryText = System.getProperty("app.queryText");
 
-        this.logger.info("Pinecone Langchain");
+        this.logger.info("Pinecone Langchain Operation: {}", operation);
 
-        this.logger.info("Operation         : {}", operation);
-        this.logger.info("Embedding Model   : {}", embeddingModelName);
-        this.logger.info("Index Name        : {}", indexName);
-        this.logger.info("Namespace         : {}", namespace);
-        this.logger.info("Reranking Model   : {}", rerankingModel);
-        this.logger.info("Query Text        : {}", queryText);
-
-        final EmbeddingModel embeddingModel = new AllMiniLmL6V2EmbeddingModel();
-        final String pineconeApiKey = this.getPineconeApiKey().orElseThrow(() -> new RuntimeException("Pinecone API key not found"));
-
-        final EmbeddingStore<TextSegment> embeddingStore = PineconeEmbeddingStore.builder()
-                .apiKey(pineconeApiKey)
-                .index(indexName)
-                .nameSpace(namespace)
-                // The index is created if it doesn't exist
-                .createIndex(PineconeServerlessIndexConfig.builder()
-                        .cloud("AWS")
-                        .region("us-east-1")
-                        .dimension(embeddingModel.dimension())
-                        .build())
-                .build();
-
-        this.logger.info("Instantiated the embedding model and built the index");
-
-        TextSegment segment1 = TextSegment.from("I like football.");
-        Embedding embedding1 = embeddingModel.embed(segment1).content();
-
-        embeddingStore.add(embedding1, segment1);
-
-        TextSegment segment2 = TextSegment.from("The weather is good today.");
-        Embedding embedding2 = embeddingModel.embed(segment2).content();
-
-        embeddingStore.add(embedding2, segment2);
-
-        this.logger.info("Added two embeddings");
-
-//        embeddingStore.removeAll();
+        switch (operation) {
+            case "delete":
+                new Delete().delete(this.getPineconeApiKey().orElseThrow(() -> new IllegalStateException("Pinecone API key not found")));
+                break;
+            case "load":
+                new Load().load(this.getPineconeApiKey().orElseThrow(() -> new IllegalStateException("Pinecone API key not found")));
+                break;
+            case "query":
+                new Query().query(this.getPineconeApiKey().orElseThrow(() -> new IllegalStateException("Pinecone API key not found")));
+                break;
+            default:
+                this.logger.error("Unknown operation: {}", operation);
+        }
 
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(exit());

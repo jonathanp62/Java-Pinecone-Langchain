@@ -46,6 +46,9 @@ ext {
 	enableNativeAccess = '--enable-native-access=ALL-UNNAMED'
 	indexName = 'langchain'
 	javaMainClass = 'net.jmp.pinecone.langchain.Main'
+	mongoDbCollection = 'quickstart'
+	mongoDbName = 'pinecone_quickstart'
+	mongoDbUri = 'etc/mongo-db-uri.txt'
 	namespace = 'langchain-namespace'
 	openaiApiKey = 'etc/open-ai-api-key.txt'
 	pineconeApiKey = 'etc/pinecone-api-key.txt'
@@ -76,7 +79,6 @@ dependencies {
 	implementation		(libs.dev.langchain4j.langchain4j.embeddings.all.minilm.l6.v2)
 	implementation		(libs.dev.langchain4j.langchain4j.pinecone)
 	implementation		(libs.org.mongodb.mongodb.driver.sync)
-//	runtimeOnly			('io.netty:netty-tcnative-boringssl-static:2.0.72.Final')
 
 	runtimeOnly			(libs.bundles.logging.runtime)
 
@@ -102,17 +104,31 @@ tasks.withType(Javadoc).configureEach {
  * Execute with - gradle execute instead of gradle run
  */
 
-tasks.register('execute', JavaExec) {
+tasks.register('delete', JavaExec) {
 	allJvmArgs = [useAssertions, enableNativeAccess] as List<String>
 	systemProperties(
 			['app.embeddingModel': embeddingModel,
 			 'app.indexName': indexName,
 			 'app.namespace': namespace,
-			 'app.openaiApiKey': openaiApiKey,
 			 'app.pineconeApiKey': pineconeApiKey,
-			 'app.rerankingModel': rerankingModel,
-			 'app.queryText': 'Famous historical structures and monuments',
-			 'app.operation': 'query']
+			 'app.operation': 'delete']
+	)
+	classpath = sourceSets.main.runtimeClasspath
+	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+	mainClass = javaMainClass
+}
+
+tasks.register('load', JavaExec) {
+	allJvmArgs = [useAssertions, enableNativeAccess] as List<String>
+	systemProperties(
+			['app.embeddingModel': embeddingModel,
+			 'app.indexName': indexName,
+        	 'app.mongoDbCollection': mongoDbCollection,
+			 'app.mongoDbName': mongoDbName,
+			 'app.mongoDbUri': mongoDbUri,
+			 'app.namespace': namespace,
+			 'app.pineconeApiKey': pineconeApiKey,
+			 'app.operation': 'load']
 	)
 	classpath = sourceSets.main.runtimeClasspath
 	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
