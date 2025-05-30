@@ -30,6 +30,7 @@ package net.jmp.pinecone.langchain;
 
 import net.jmp.pinecone.langchain.examples.rag.EasyRag;
 import net.jmp.pinecone.langchain.examples.rag.NaiveRag;
+import net.jmp.pinecone.langchain.examples.rag.QueryCompressionRag;
 
 import static net.jmp.util.logging.LoggerUtils.*;
 
@@ -75,6 +76,9 @@ public final class Main implements Runnable {
                 break;
             case "query":
                 new Query().operate();
+                break;
+            case "querycompressionrag":
+                new QueryCompressionRag().run();
                 break;
             case "rag":
                 new Rag().operate();

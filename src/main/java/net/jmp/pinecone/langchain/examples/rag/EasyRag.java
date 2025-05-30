@@ -99,7 +99,7 @@ public final class EasyRag implements Runnable {
     /// @param openaiApiKey java.lang.String
     private void rag(final String openaiApiKey) {
         if (this.logger.isTraceEnabled()) {
-            this.logger.trace(entry());
+            this.logger.trace(entryWith(openaiApiKey));
         }
 
         final List<Document> documents = loadDocuments(toPath("documents/"), glob("*.txt"));
