@@ -176,3 +176,13 @@ tasks.register("easyrag") {
 
 	finalizedBy("rag")
 }
+
+tasks.register("naiverag") {
+	doFirst {
+		tasks.rag.configure {
+			systemProperty("app.operation", "naiverag")
+		}
+	}
+
+	finalizedBy("rag")
+}

@@ -81,7 +81,7 @@ public final class EasyRag implements Runnable {
 
         final String openaiApiKey = System.getProperty("app.openaiApiKey");
 
-        this.logger.info("EasyRag");
+        this.logger.info("Easy Rag");
 
         if (this.logger.isDebugEnabled()) {
             this.logger.debug("OpenAI Api Key  : {}", openaiApiKey);
