@@ -41,6 +41,10 @@
         <appender-ref ref="MAIN" />
     </logger>
 
+    <logger name="net.jmp.pinecone.langchain.examples.rag" additivity="false" level="debug">
+        <appender-ref ref="MAIN" />
+    </logger>
+
     <logger name="org.mongodb.driver" additivity="false" level="off">
         <appender-ref ref="MAIN" />
     </logger>

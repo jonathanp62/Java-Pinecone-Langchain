@@ -28,6 +28,8 @@ package net.jmp.pinecone.langchain;
  * SOFTWARE.
  */
 
+import net.jmp.pinecone.langchain.examples.rag.EasyRag;
+
 import static net.jmp.util.logging.LoggerUtils.*;
 
 import org.slf4j.Logger;
@@ -60,6 +62,9 @@ public final class Main implements Runnable {
         switch (operation) {
             case "delete":
                 new Delete().operate();
+                break;
+            case "easyrag":
+                new EasyRag().run();
                 break;
             case "load":
                 new Load().operate();

@@ -28,6 +28,7 @@ package net.jmp.pinecone.langchain;
  * SOFTWARE.
  */
 
+import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.data.segment.TextSegment;
 
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -44,6 +45,8 @@ import static dev.langchain4j.model.openai.OpenAiChatModelName.GPT_4_1;
 
 import dev.langchain4j.model.scoring.ScoringModel;
 
+import dev.langchain4j.rag.AugmentationRequest;
+import dev.langchain4j.rag.AugmentationResult;
 import dev.langchain4j.rag.DefaultRetrievalAugmentor;
 import dev.langchain4j.rag.RetrievalAugmentor;
 
@@ -52,6 +55,8 @@ import dev.langchain4j.rag.content.aggregator.ReRankingContentAggregator;
 
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
+
+import dev.langchain4j.rag.query.Metadata;
 
 import dev.langchain4j.service.AiServices;
 
@@ -131,6 +136,15 @@ final class Rag extends Operation {
                 .contentRetriever(contentRetriever)
                 .contentAggregator(contentAggregator)
                 .build();
+
+        final UserMessage userMessage = new UserMessage(queryText);
+        final AugmentationRequest augmentationRequest = new AugmentationRequest(userMessage, Metadata.from(userMessage, null, null));
+        final AugmentationResult augmentationResult = retrievalAugmentor.augment(augmentationRequest);
+
+        if (this.logger.isDebugEnabled()) {
+            this.logger.debug("Augmented chat message: {}", augmentationResult.chatMessage());
+            this.logger.debug("Augmented contents    : {}", augmentationResult.contents());
+        }
 
         final ChatModel model = OpenAiChatModel.builder()
                 .apiKey(this.getApiKey(openaiApiKey).orElseThrow(() -> new IllegalStateException("Unable to get OpenAI API key")))

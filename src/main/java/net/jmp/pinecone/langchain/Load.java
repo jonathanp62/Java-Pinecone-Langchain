@@ -235,5 +235,10 @@ final class Load extends Operation {
 
         /// The category.
         private String category;
+
+        /// The default constructor.
+        private TextDocument() {
+            super();
+        }
     }
 }

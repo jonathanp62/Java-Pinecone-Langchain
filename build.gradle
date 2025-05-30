@@ -166,3 +166,13 @@ tasks.register('rag', JavaExec) {
 	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
 	mainClass = javaMainClass
 }
+
+tasks.register("easyrag") {
+	doFirst {
+		tasks.rag.configure {
+			systemProperty("app.operation", "easyrag")
+		}
+	}
+
+	finalizedBy("rag")
+}
