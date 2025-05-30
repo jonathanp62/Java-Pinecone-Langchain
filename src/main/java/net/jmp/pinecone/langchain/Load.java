@@ -32,7 +32,10 @@ import com.mongodb.client.*;
 
 import com.mongodb.client.model.Projections;
 
+import dev.langchain4j.data.document.Metadata;
+
 import dev.langchain4j.data.embedding.Embedding;
+
 import dev.langchain4j.data.segment.TextSegment;
 
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -46,6 +49,7 @@ import java.nio.file.Paths;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static net.jmp.util.logging.LoggerUtils.*;
@@ -70,11 +74,10 @@ final class Load extends Operation {
     }
 
     /// The operate method.
-    ///
-    /// @param  pineconeApiKey  java.lang.String
-    void operate(final String pineconeApiKey) {
+    @Override
+    void operate() {
         if (this.logger.isTraceEnabled()) {
-            this.logger.trace(entryWith(pineconeApiKey));
+            this.logger.trace(entry());
         }
 
         final String embeddingModelName = System.getProperty("app.embeddingModel");
@@ -83,6 +86,7 @@ final class Load extends Operation {
         final String mongoDbName = System.getProperty("app.mongoDbName");
         final String mongoDbUri = System.getProperty("app.mongoDbUri");
         final String namespace = System.getProperty("app.namespace");
+        final String pineconeApiKey = System.getProperty("app.pineconeApiKey");
 
         this.logger.info("Loading Pinecone Index: {}", indexName);
 
@@ -93,10 +97,10 @@ final class Load extends Operation {
             this.logger.debug("MongoDB Name      : {}", mongoDbName);
             this.logger.debug("MongoDB URI       : {}", mongoDbUri);
             this.logger.debug("Namespace         : {}", namespace);
-        }
+            this.logger.debug("Pinecone Api Key  : {}", pineconeApiKey);}
 
         final EmbeddingStore<TextSegment> embeddingStore = this.getEmbeddingStore(
-                pineconeApiKey,
+                this.getApiKey(pineconeApiKey).orElseThrow(() -> new IllegalStateException("Pinecone API key not found")),
                 embeddingModelName,
                 indexName,
                 namespace
@@ -104,16 +108,22 @@ final class Load extends Operation {
 
         final EmbeddingModel embeddingModel = this.getEmbeddingModel(embeddingModelName);
 
-        final List<String> strings = this.createContent(mongoDbUri, mongoDbName, mongoDbCollection);
+        final List<TextDocument> textDocuments = this.createContent(mongoDbUri, mongoDbName, mongoDbCollection);
 
-        for (final String string : strings) {
-            final TextSegment textSegment = TextSegment.from(string);
+        for (final TextDocument textDocument : textDocuments) {
+            final Metadata metadata = Metadata.from(Map.of(
+                    "mongoid", textDocument.mongoId,
+                    "documentid", textDocument.documentId,
+                    "category", textDocument.category
+            ));
+
+            final TextSegment textSegment = TextSegment.from(textDocument.content, metadata);
             final Embedding embedding = embeddingModel.embed(textSegment).content();
 
             embeddingStore.add(embedding, textSegment);
         }
 
-        this.logger.info("Added {} embeddings", strings.size());
+        this.logger.info("Added {} embeddings", textDocuments.size());
 
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(exit());
@@ -125,15 +135,15 @@ final class Load extends Operation {
     /// @param  dbUri           java.lang.String
     /// @param  dbName          java.lang.String
     /// @param  collectionName  java.lang.String
-    /// @return                 java.util.List<java.lang.String>
-    private List<String> createContent(final String dbUri,
+    /// @return                 java.util.List<net.jmp.pinecone.langchain.Load.TextDocument>
+    private List<TextDocument> createContent(final String dbUri,
                                        final String dbName,
                                        final String collectionName) {
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(entryWith(dbUri, dbName, collectionName));
         }
 
-        final List<String> strings = new LinkedList<>();
+        final List<TextDocument> textDocuments = new LinkedList<>();
 
         /* Get the content from the database */
 
@@ -144,7 +154,7 @@ final class Load extends Operation {
             final MongoCollection<Document> collection = database.getCollection(collectionName);
 
             final Bson projectionFields = Projections.fields(
-                    Projections.include("content")
+                    Projections.include("id", "content", "category")
             );
 
             try (final MongoCursor<Document> cursor = collection
@@ -157,22 +167,30 @@ final class Load extends Operation {
 
                 while (cursor.hasNext()) {
                     final Document document = cursor.next();
-                    final String content = document.get("content").toString();
+                    final TextDocument textDocument = new TextDocument();
+
+                    textDocument.mongoId = document.get("_id").toString();
+                    textDocument.documentId = document.get("id").toString();
+                    textDocument.content = document.get("content").toString();
+                    textDocument.category = document.get("category").toString();
 
                     if (this.logger.isDebugEnabled()) {
-                        this.logger.debug("Content : {}", content);
+                        this.logger.debug("MongoId   : {}", textDocument.mongoId);
+                        this.logger.debug("DocumentId: {}", textDocument.documentId);
+                        this.logger.debug("Content   : {}", textDocument.content);
+                        this.logger.debug("Category  : {}", textDocument.category);
                     }
 
-                    strings.add(content);
+                    textDocuments.add(textDocument);
                 }
             }
         }
 
         if (this.logger.isTraceEnabled()) {
-            this.logger.trace(exitWith(strings));
+            this.logger.trace(exitWith(textDocuments));
         }
 
-        return strings;
+        return textDocuments;
     }
 
     /// Get the MongoDB URI.
@@ -202,5 +220,20 @@ final class Load extends Operation {
         }
 
         return Optional.ofNullable(mongoDbUri);
+    }
+
+    /// The text document class.
+    private static class TextDocument {
+        /// The MongoDb ID.
+        private String mongoId;
+
+        /// The document ID.
+        private String documentId;
+
+        /// The content.
+        private String content;
+
+        /// The category.
+        private String category;
     }
 }

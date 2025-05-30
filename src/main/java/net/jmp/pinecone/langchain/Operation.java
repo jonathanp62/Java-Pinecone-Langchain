@@ -39,6 +39,13 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.pinecone.PineconeEmbeddingStore;
 import dev.langchain4j.store.embedding.pinecone.PineconeServerlessIndexConfig;
 
+import java.io.IOException;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import java.util.Optional;
+
 import static net.jmp.util.logging.LoggerUtils.*;
 
 import org.slf4j.Logger;
@@ -58,9 +65,7 @@ abstract class Operation {
     }
 
     /// The operate method.
-    ///
-    /// @param  pineconeApiKey  java.lang.String
-    abstract void operate(String pineconeApiKey);
+    abstract void operate();
 
     /// Returns the embedding store.
     ///
@@ -120,5 +125,34 @@ abstract class Operation {
         }
 
         return embeddingModel;
+    }
+
+    /// Get the API key.
+    ///
+    /// @param  fileName    java.lang.String
+    /// @return             java.util.Optional<java.lang.String>
+    protected Optional<String> getApiKey(final String fileName) {
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace(entryWith(fileName));
+        }
+
+        String apiKey = null;
+
+        try {
+            apiKey = Files.readString(Paths.get(fileName)).trim();
+
+            if (this.logger.isDebugEnabled()) {
+                this.logger.debug("API key file: {}", fileName);
+                this.logger.debug("API key: {}", apiKey);
+            }
+        } catch (final IOException ioe) {
+            this.logger.error("Unable to read API key file: {}", fileName, ioe);
+        }
+
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace(exitWith(apiKey));
+        }
+
+        return Optional.ofNullable(apiKey);
     }
 }

@@ -28,13 +28,6 @@ package net.jmp.pinecone.langchain;
  * SOFTWARE.
  */
 
-import java.io.IOException;
-
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
-import java.util.Optional;
-
 import static net.jmp.util.logging.LoggerUtils.*;
 
 import org.slf4j.Logger;
@@ -66,16 +59,16 @@ public final class Main implements Runnable {
 
         switch (operation) {
             case "delete":
-                new Delete().operate(this.getPineconeApiKey().orElseThrow(() -> new IllegalStateException("Pinecone API key not found")));
+                new Delete().operate();
                 break;
             case "load":
-                new Load().operate(this.getPineconeApiKey().orElseThrow(() -> new IllegalStateException("Pinecone API key not found")));
+                new Load().operate();
                 break;
             case "query":
-                new Query().operate(this.getPineconeApiKey().orElseThrow(() -> new IllegalStateException("Pinecone API key not found")));
+                new Query().operate();
                 break;
             case "rag":
-                new Rag().operate(this.getPineconeApiKey().orElseThrow(() -> new IllegalStateException("Pinecone API key not found")));
+                new Rag().operate();
                 break;
             default:
                 this.logger.error("Unknown operation: {}", operation);
@@ -84,54 +77,6 @@ public final class Main implements Runnable {
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(exit());
         }
-    }
-
-    /// Get the Pinecone API key.
-    ///
-    /// @return java.util.Optional<java.lang.String>
-    private Optional<String> getPineconeApiKey() {
-        if (this.logger.isTraceEnabled()) {
-            this.logger.trace(entry());
-        }
-
-        final Optional<String> apiKey = this.getApiKey("app.pineconeApiKey");
-
-        if (this.logger.isTraceEnabled()) {
-            this.logger.trace(exitWith(apiKey));
-        }
-
-        return apiKey;
-    }
-
-    /// Get the API key.
-    ///
-    /// @param  propertyName    java.lang.String
-    /// @return                 java.util.Optional<java.lang.String>
-    private Optional<String> getApiKey(final String propertyName) {
-        if (this.logger.isTraceEnabled()) {
-            this.logger.trace(entryWith(propertyName));
-        }
-
-        final String apiKeyFileName = System.getProperty(propertyName);
-
-        String apiKey = null;
-
-        try {
-            apiKey = Files.readString(Paths.get(apiKeyFileName)).trim();
-
-            if (this.logger.isDebugEnabled()) {
-                this.logger.debug("API key file: {}", apiKeyFileName);
-                this.logger.debug("API key: {}", apiKey);
-            }
-        } catch (final IOException ioe) {
-            this.logger.error("Unable to read API key file: {}", apiKeyFileName, ioe);
-        }
-
-        if (this.logger.isTraceEnabled()) {
-            this.logger.trace(exitWith(apiKey));
-        }
-
-        return Optional.ofNullable(apiKey);
     }
 
     /// The main application entry point.

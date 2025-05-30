@@ -58,29 +58,30 @@ final class Query extends Operation {
     }
 
     /// The operate method.
-    ///
-    /// @param  pineconeApiKey  java.lang.String
-    void operate(final String pineconeApiKey) {
+    @Override
+    void operate() {
         if (this.logger.isTraceEnabled()) {
-            this.logger.trace(entryWith(pineconeApiKey));
+            this.logger.trace(entry());
         }
 
         final String embeddingModelName = System.getProperty("app.embeddingModel");
         final String indexName = System.getProperty("app.indexName");
         final String namespace = System.getProperty("app.namespace");
+        final String pineconeApiKey = System.getProperty("app.pineconeApiKey");
         final String queryText = System.getProperty("app.queryText");
 
         this.logger.info("Querying Pinecone Index: {}", indexName);
 
         if (this.logger.isDebugEnabled()) {
-            this.logger.debug("Embedding Model: {}", embeddingModelName);
-            this.logger.debug("Index Name     : {}", indexName);
-            this.logger.debug("Namespace      : {}", namespace);
-            this.logger.debug("Query Text     : {}", queryText);
+            this.logger.debug("Embedding Model : {}", embeddingModelName);
+            this.logger.debug("Index Name      : {}", indexName);
+            this.logger.debug("Namespace       : {}", namespace);
+            this.logger.debug("Pinecone Api Key: {}", pineconeApiKey);
+            this.logger.debug("Query Text      : {}", queryText);
         }
 
         final EmbeddingStore<TextSegment> embeddingStore = this.getEmbeddingStore(
-                pineconeApiKey,
+                this.getApiKey(pineconeApiKey).orElseThrow(() -> new IllegalStateException("Pinecone API key not found")),
                 embeddingModelName,
                 indexName,
                 namespace

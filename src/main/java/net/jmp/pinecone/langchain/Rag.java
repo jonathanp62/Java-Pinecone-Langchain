@@ -62,11 +62,6 @@ import static net.jmp.util.logging.LoggerUtils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Optional;
-
 /// The retrieval-augmented generation class.
 ///
 /// @version    0.1.0
@@ -81,11 +76,10 @@ final class Rag extends Operation {
     }
 
     /// The operate method.
-    ///
-    /// @param  pineconeApiKey  java.lang.String
-    void operate(final String pineconeApiKey) {
+    @Override
+    void operate() {
         if (this.logger.isTraceEnabled()) {
-            this.logger.trace(entryWith(pineconeApiKey));
+            this.logger.trace(entry());
         }
 
         final String cohereApiKey = System.getProperty("app.cohereApiKey");
@@ -93,21 +87,23 @@ final class Rag extends Operation {
         final String indexName = System.getProperty("app.indexName");
         final String namespace = System.getProperty("app.namespace");
         final String openaiApiKey = System.getProperty("app.openaiApiKey");
+        final String pineconeApiKey = System.getProperty("app.pineconeApiKey");
         final String queryText = System.getProperty("app.queryText");
 
         this.logger.info("Retrieving/Augmenting/Generating from Pinecone Index: {}", indexName);
 
         if (this.logger.isDebugEnabled()) {
-            this.logger.debug("Cohere Api Key : {}", cohereApiKey);
-            this.logger.debug("Embedding Model: {}", embeddingModelName);
-            this.logger.debug("Index Name     : {}", indexName);
-            this.logger.debug("Namespace      : {}", namespace);
-            this.logger.debug("OpenAI Api Key : {}", openaiApiKey);
-            this.logger.debug("Query Text     : {}", queryText);
+            this.logger.debug("Cohere Api Key  : {}", cohereApiKey);
+            this.logger.debug("Embedding Model : {}", embeddingModelName);
+            this.logger.debug("Index Name      : {}", indexName);
+            this.logger.debug("Namespace       : {}", namespace);
+            this.logger.debug("OpenAI Api Key  : {}", openaiApiKey);
+            this.logger.debug("Pinecone Api Key: {}", pineconeApiKey);
+            this.logger.debug("Query Text      : {}", queryText);
         }
 
         final EmbeddingStore<TextSegment> embeddingStore = this.getEmbeddingStore(
-                pineconeApiKey,
+                this.getApiKey(pineconeApiKey).orElseThrow(() -> new IllegalStateException("Pinecone API key not found")),
                 embeddingModelName,
                 indexName,
                 namespace
@@ -154,35 +150,6 @@ final class Rag extends Operation {
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(exit());
         }
-    }
-
-    /// Get the API key.
-    ///
-    /// @param  fileName    java.lang.String
-    /// @return             java.util.Optional<java.lang.String>
-    private Optional<String> getApiKey(final String fileName) {
-        if (this.logger.isTraceEnabled()) {
-            this.logger.trace(entryWith(fileName));
-        }
-
-        String apiKey = null;
-
-        try {
-            apiKey = Files.readString(Paths.get(fileName)).trim();
-
-            if (this.logger.isDebugEnabled()) {
-                this.logger.debug("API key file: {}", fileName);
-                this.logger.debug("API key: {}", apiKey);
-            }
-        } catch (final IOException ioe) {
-            this.logger.error("Unable to read API key file: {}", fileName, ioe);
-        }
-
-        if (this.logger.isTraceEnabled()) {
-            this.logger.trace(exitWith(apiKey));
-        }
-
-        return Optional.ofNullable(apiKey);
     }
 
     /// The assistant interface.
