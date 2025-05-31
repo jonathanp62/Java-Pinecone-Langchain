@@ -196,3 +196,13 @@ tasks.register("querycompressionrag") {
 
 	finalizedBy("rag")
 }
+
+tasks.register("queryroutingrag") {
+	doFirst {
+		tasks.rag.configure {
+			systemProperty("app.operation", "queryroutingrag")
+		}
+	}
+
+	finalizedBy("rag")
+}

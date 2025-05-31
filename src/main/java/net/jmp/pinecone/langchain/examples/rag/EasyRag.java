@@ -61,6 +61,8 @@ import org.slf4j.LoggerFactory;
 
 /// The easy RAG class.
 ///
+/// https://github.com/langchain4j/langchain4j-examples/blob/main/rag-examples/src/main/java/_1_easy/Easy_RAG_Example.java
+///
 /// @version    0.1.0
 /// @since      0.1.0
 public final class EasyRag implements Runnable {

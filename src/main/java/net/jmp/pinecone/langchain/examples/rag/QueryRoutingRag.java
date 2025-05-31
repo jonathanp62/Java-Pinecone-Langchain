@@ -1,7 +1,7 @@
 package net.jmp.pinecone.langchain.examples.rag;
 
 /*
- * (#)QueryCompressionRag.java  0.1.0   05/30/2025
+ * (#)QueryRoutingRag.java  0.1.0   05/31/2025
  *
  * @author   Jonathan Parker
  *
@@ -29,12 +29,16 @@ package net.jmp.pinecone.langchain.examples.rag;
  */
 
 import dev.langchain4j.data.document.Document;
+import dev.langchain4j.data.document.DocumentParser;
+import dev.langchain4j.data.document.DocumentSplitter;
 
 import static dev.langchain4j.data.document.loader.FileSystemDocumentLoader.loadDocument;
 
 import dev.langchain4j.data.document.parser.TextDocumentParser;
 
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
+
+import dev.langchain4j.data.embedding.Embedding;
 
 import dev.langchain4j.data.segment.TextSegment;
 
@@ -58,17 +62,20 @@ import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 
-import dev.langchain4j.rag.query.transformer.CompressingQueryTransformer;
-import dev.langchain4j.rag.query.transformer.QueryTransformer;
+import dev.langchain4j.rag.query.router.LanguageModelQueryRouter;
+import dev.langchain4j.rag.query.router.QueryRouter;
 
 import dev.langchain4j.service.AiServices;
 
 import dev.langchain4j.store.embedding.EmbeddingStore;
-import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 
+import java.nio.file.Path;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static net.jmp.pinecone.langchain.examples.rag.Utils.toPath;
 
@@ -77,21 +84,18 @@ import static net.jmp.util.logging.LoggerUtils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/// The query compression RAG class.
+/// The query routing RAG class.
 ///
-/// Query compression is a method of compressing a query into a shorter version of the query
-/// so that the model can focus on the most relevant information.
-///
-/// https://github.com/langchain4j/langchain4j-examples/blob/main/rag-examples/src/main/java/_3_advanced/_01_Advanced_RAG_with_Query_Compression_Example.java
+/// https://github.com/langchain4j/langchain4j-examples/blob/main/rag-examples/src/main/java/_3_advanced/_02_Advanced_RAG_with_Query_Routing_Example.java
 ///
 /// @version    0.1.0
 /// @since      0.1.0
-public final class QueryCompressionRag implements Runnable {
+public class QueryRoutingRag implements Runnable {
     /// The logger.
     private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
     /// The default constructor.
-    public QueryCompressionRag() {
+    public QueryRoutingRag() {
         super();
     }
 
@@ -104,7 +108,7 @@ public final class QueryCompressionRag implements Runnable {
 
         final String openaiApiKey = System.getProperty("app.openaiApiKey");
 
-        this.logger.info("Query Compression Rag");
+        this.logger.info("Query Routing Rag");
 
         if (this.logger.isDebugEnabled()) {
             this.logger.debug("OpenAI Api Key  : {}", openaiApiKey);
@@ -125,18 +129,31 @@ public final class QueryCompressionRag implements Runnable {
             this.logger.trace(entryWith(openaiApiKey));
         }
 
-        final String documentPath = "documents/biography-of-john-doe.txt";
-        final Document document = loadDocument(toPath(documentPath), new TextDocumentParser());
         final EmbeddingModel embeddingModel = new BgeSmallEnV15QuantizedEmbeddingModel();
-        final EmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
 
-        final EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
-                .documentSplitter(DocumentSplitters.recursive(300, 0))
+        // Create a separate embedding store specifically for biographies
+
+        final EmbeddingStore<TextSegment> biographyEmbeddingStore =
+                this.embed(toPath("documents/biography-of-john-doe.txt"), embeddingModel);
+
+        final ContentRetriever biographyContentRetriever = EmbeddingStoreContentRetriever.builder()
+                .embeddingStore(biographyEmbeddingStore)
                 .embeddingModel(embeddingModel)
-                .embeddingStore(embeddingStore)
+                .maxResults(2)
+                .minScore(0.6)
                 .build();
 
-        ingestor.ingest(document);
+        // Additionally, create a separate embedding store dedicated to terms of use
+
+        final EmbeddingStore<TextSegment> termsOfUseEmbeddingStore =
+                this.embed(toPath("documents/miles-of-smiles-terms-of-use.txt"), embeddingModel);
+
+        final ContentRetriever termsOfUseContentRetriever = EmbeddingStoreContentRetriever.builder()
+                .embeddingStore(termsOfUseEmbeddingStore)
+                .embeddingModel(embeddingModel)
+                .maxResults(2)
+                .minScore(0.6)
+                .build();
 
         // Create an OpenAI chat model
 
@@ -145,20 +162,21 @@ public final class QueryCompressionRag implements Runnable {
                 .modelName(GPT_4_1)
                 .build();
 
+        // Create a query router
+
+        final Map<ContentRetriever, String> retrieverToDescription = new HashMap<>();
+
+        retrieverToDescription.put(biographyContentRetriever, "biography of John Doe");
+        retrieverToDescription.put(termsOfUseContentRetriever, "terms of use of car rental company");
+
         /*
-         * We will create a CompressingQueryTransformer, which is responsible for compressing
-         * the user's query and the preceding conversation into a single, stand-alone query.
-         * This should significantly improve the quality of the retrieval process.
+         * A LanguageModelQueryRouter uses the chat model to making routing decisions.
+         * Each content retriever provided in the constructor should be accompanied by
+         * a description of the retriever's purpose which will be used by the chat model
+         * to make routing decisions.
          */
 
-        final QueryTransformer queryTransformer = new CompressingQueryTransformer(chatModel);
-
-        final ContentRetriever contentRetriever = EmbeddingStoreContentRetriever.builder()
-                .embeddingStore(embeddingStore)
-                .embeddingModel(embeddingModel)
-                .maxResults(2) // On each interaction we will retrieve the 2 most relevant segments
-                .minScore(0.5) // We want to retrieve segments at least somewhat similar to user query
-                .build();
+        final QueryRouter queryRouter = new LanguageModelQueryRouter(chatModel, retrieverToDescription);
 
         /*
          * The RetrievalAugmentor serves as the entry point into the RAG flow in LangChain4j.
@@ -167,13 +185,10 @@ public final class QueryCompressionRag implements Runnable {
          */
 
         final RetrievalAugmentor retrievalAugmentor = DefaultRetrievalAugmentor.builder()
-                .queryTransformer(queryTransformer)
-                .contentRetriever(contentRetriever)
+                .queryRouter(queryRouter)
                 .build();
 
         final ChatMemory chatMemory = MessageWindowChatMemory.withMaxMessages(2);
-
-        // Create an assistant that has access to our documents
 
         final Assistant assistant = AiServices.builder(Assistant.class)
                 .chatModel(chatModel)               // It should use OpenAI LLM
@@ -183,8 +198,7 @@ public final class QueryCompressionRag implements Runnable {
 
         final List<String> questions = List.of(
                 "What is the legacy of John Doe?",
-                "When was he born?",
-                "How old is he?"
+                "Can I cancel my reservation?"
         );
 
         for (final String question : questions) {
@@ -197,5 +211,33 @@ public final class QueryCompressionRag implements Runnable {
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(exit());
         }
+    }
+
+    /// The embed method.
+    ///
+    /// @param documentPath     java.nio.file.Path
+    /// @param embeddingModel   dev.langchain4j.model.embedding.EmbeddingModel
+    /// @return                 dev.langchain4j.store.embedding.EmbeddingStore
+    private EmbeddingStore<TextSegment> embed(final Path documentPath, final EmbeddingModel embeddingModel) {
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace(entryWith(documentPath, embeddingModel));
+        }
+
+        final DocumentParser documentParser = new TextDocumentParser();
+        final Document document = loadDocument(documentPath, documentParser);
+        final DocumentSplitter splitter = DocumentSplitters.recursive(300, 0);
+
+        final List<TextSegment> segments = splitter.split(document);
+        final List<Embedding> embeddings = embeddingModel.embedAll(segments).content();
+
+        final EmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
+
+        embeddingStore.addAll(embeddings, segments);
+
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace(exitWith(embeddingStore));
+        }
+
+        return embeddingStore;
     }
 }

@@ -76,9 +76,11 @@ import org.slf4j.LoggerFactory;
 
 /// The naive RAG class.
 ///
+/// https://github.com/langchain4j/langchain4j-examples/blob/main/rag-examples/src/main/java/_2_naive/Naive_RAG_Example.java
+///
 /// @version    0.1.0
 /// @since      0.1.0
-public class NaiveRag implements Runnable {
+public final class NaiveRag implements Runnable {
     /// The logger.
     private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
