@@ -32,6 +32,9 @@ import static dev.langchain4j.data.document.Metadata.metadata;
 
 import dev.langchain4j.data.segment.TextSegment;
 
+import dev.langchain4j.memory.chat.ChatMemoryProvider;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
+
 import dev.langchain4j.model.chat.ChatModel;
 
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -45,6 +48,8 @@ import static dev.langchain4j.model.openai.OpenAiChatModelName.GPT_4_1;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 
+import dev.langchain4j.rag.query.Query;
+
 import dev.langchain4j.service.AiServices;
 
 import dev.langchain4j.store.embedding.EmbeddingStore;
@@ -54,6 +59,12 @@ import dev.langchain4j.store.embedding.filter.Filter;
 import static dev.langchain4j.store.embedding.filter.MetadataFilterBuilder.metadataKey;
 
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
+
+import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
+
+import java.util.List;
+
+import java.util.function.Function;
 
 import static net.jmp.util.logging.LoggerUtils.*;
 
@@ -175,6 +186,46 @@ public final class MetadataFilteringRag implements Runnable, Rag {
             this.logger.trace(entryWith(embeddingModel, chatModel));
         }
 
+        final TextSegment user1Info = TextSegment.from("My favorite color is green", metadata("userId", "1"));
+        final TextSegment user2Info = TextSegment.from("My favorite color is red", metadata("userId", "2"));
+
+        final EmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
+
+        embeddingStore.add(embeddingModel.embed(user1Info).content(), user1Info);
+        embeddingStore.add(embeddingModel.embed(user2Info).content(), user2Info);
+
+        // Define a function that returns a filter based on the user ID
+
+        final Function<Query, Filter> filterByUserId =
+                (query) -> metadataKey("userId").isEqualTo(query.metadata().chatMemoryId().toString());
+
+        final ContentRetriever contentRetriever = EmbeddingStoreContentRetriever.builder()
+                .embeddingStore(embeddingStore)
+                .embeddingModel(embeddingModel)
+                .dynamicFilter(filterByUserId)   // Limit the search to segments only about the user
+                .build();
+
+        final ChatMemoryProvider chatMemoryProvider = memoryId -> MessageWindowChatMemory.builder()
+                .id(memoryId)
+                .maxMessages(5)
+                .chatMemoryStore(new InMemoryChatMemoryStore())
+                .build();
+
+        final PersonalizedAssistant assistant = AiServices.builder(PersonalizedAssistant.class)
+                .chatModel(chatModel)
+                .chatMemoryProvider(chatMemoryProvider)
+                .contentRetriever(contentRetriever)
+                .build();
+
+        final List<UserQuestion> userQuestions = List.of(
+                new UserQuestion("1", "Which color would be best for a dress?"),
+                new UserQuestion("2", "Which color would be best for a suit?"));
+
+        for (final UserQuestion userQuestion : userQuestions) {
+            this.logger.info("Question: {}", userQuestion.question());
+            this.logger.info("Answer  : {}", assistant.chat(userQuestion.userId(), userQuestion.question()));
+        }
+
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(exit());
         }
@@ -193,4 +244,13 @@ public final class MetadataFilteringRag implements Runnable, Rag {
             this.logger.trace(exit());
         }
     }
+
+    /// The user question record.
+    ///
+    /// @param userId   java.lang.String
+    /// @param question java.lang.String
+    record UserQuestion(
+            String userId,
+            String question
+    ) {}
 }
