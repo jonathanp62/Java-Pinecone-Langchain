@@ -28,10 +28,7 @@ package net.jmp.pinecone.langchain;
  * SOFTWARE.
  */
 
-import net.jmp.pinecone.langchain.examples.rag.EasyRag;
-import net.jmp.pinecone.langchain.examples.rag.NaiveRag;
-import net.jmp.pinecone.langchain.examples.rag.QueryCompressionRag;
-import net.jmp.pinecone.langchain.examples.rag.QueryRoutingRag;
+import net.jmp.pinecone.langchain.examples.rag.*;
 
 import static net.jmp.util.logging.LoggerUtils.*;
 
@@ -86,6 +83,9 @@ public final class Main implements Runnable {
                 break;
             case "rag":
                 new Rag().operate();
+                break;
+            case "rerankingrag":
+                new RerankingRag().run();
                 break;
             default:
                 this.logger.error("Unknown operation: {}", operation);

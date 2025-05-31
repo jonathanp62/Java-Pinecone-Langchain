@@ -206,3 +206,13 @@ tasks.register("queryroutingrag") {
 
 	finalizedBy("rag")
 }
+
+tasks.register("rerankingrag") {
+	doFirst {
+		tasks.rag.configure {
+			systemProperty("app.operation", "rerankingrag")
+		}
+	}
+
+	finalizedBy("rag")
+}

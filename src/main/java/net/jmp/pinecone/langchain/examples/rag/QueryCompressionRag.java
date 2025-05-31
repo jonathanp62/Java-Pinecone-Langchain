@@ -121,7 +121,7 @@ public final class QueryCompressionRag implements Runnable, Rag {
     ///
     /// @param openaiApiKey java.lang.String
     @Override
-    public void rag(String openaiApiKey) {
+    public void rag(final String openaiApiKey) {
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(entryWith(openaiApiKey));
         }
