@@ -86,7 +86,7 @@ import org.slf4j.LoggerFactory;
 ///
 /// @version    0.1.0
 /// @since      0.1.0
-public final class QueryCompressionRag implements Runnable {
+public final class QueryCompressionRag implements Runnable, Rag {
     /// The logger.
     private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
@@ -120,7 +120,8 @@ public final class QueryCompressionRag implements Runnable {
     /// The rag method.
     ///
     /// @param openaiApiKey java.lang.String
-    private void rag(String openaiApiKey) {
+    @Override
+    public void rag(String openaiApiKey) {
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(entryWith(openaiApiKey));
         }
