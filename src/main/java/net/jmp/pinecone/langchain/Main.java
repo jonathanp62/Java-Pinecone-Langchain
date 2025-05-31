@@ -72,6 +72,9 @@ public final class Main implements Runnable {
             case "metadatarag":
                 new MetadataRag().run();
                 break;
+            case "metadatafilteringrag":
+                new MetadataFilteringRag().run();
+                break;
             case "naiverag":
                 new NaiveRag().run();
                 break;
