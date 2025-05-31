@@ -69,6 +69,9 @@ public final class Main implements Runnable {
             case "load":
                 new Load().operate();
                 break;
+            case "metadatarag":
+                new MetadataRag().run();
+                break;
             case "naiverag":
                 new NaiveRag().run();
                 break;

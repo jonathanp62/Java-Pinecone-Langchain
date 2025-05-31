@@ -177,6 +177,16 @@ tasks.register("easyrag") {
 	finalizedBy("rag")
 }
 
+tasks.register("metadatarag") {
+	doFirst {
+		tasks.rag.configure {
+			systemProperty("app.operation", "metadatarag")
+		}
+	}
+
+	finalizedBy("rag")
+}
+
 tasks.register("naiverag") {
 	doFirst {
 		tasks.rag.configure {
