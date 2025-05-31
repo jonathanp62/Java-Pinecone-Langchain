@@ -58,6 +58,9 @@ import dev.langchain4j.store.embedding.filter.Filter;
 
 import static dev.langchain4j.store.embedding.filter.MetadataFilterBuilder.metadataKey;
 
+import dev.langchain4j.store.embedding.filter.builder.sql.LanguageModelSqlFilterBuilder;
+import dev.langchain4j.store.embedding.filter.builder.sql.TableDefinition;
+
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 
 import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
@@ -239,6 +242,43 @@ public final class MetadataFilteringRag implements Runnable, Rag {
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(entryWith(embeddingModel, chatModel));
         }
+
+        final TextSegment forrestGump = TextSegment.from("Forrest Gump", metadata("genre", "drama").put("year", 1994));
+        final TextSegment groundhogDay = TextSegment.from("Groundhog Day", metadata("genre", "comedy").put("year", 1993));
+        final TextSegment dieHard = TextSegment.from("Die Hard", metadata("genre", "action").put("year", 1998));
+
+        // Describe metadata keys as if they were columns in the SQL table
+
+        final TableDefinition tableDefinition = TableDefinition.builder()
+                .name("movies")
+                .addColumn("genre", "VARCHAR", "one of: [comedy, drama, action]")
+                .addColumn("year", "INT")
+                .build();
+
+        final LanguageModelSqlFilterBuilder sqlFilterBuilder = new LanguageModelSqlFilterBuilder(chatModel, tableDefinition);
+
+        final EmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
+
+        embeddingStore.add(embeddingModel.embed(forrestGump).content(), forrestGump);
+        embeddingStore.add(embeddingModel.embed(groundhogDay).content(), groundhogDay);
+        embeddingStore.add(embeddingModel.embed(dieHard).content(), dieHard);
+
+        final ContentRetriever contentRetriever = EmbeddingStoreContentRetriever.builder()
+                .embeddingStore(embeddingStore)
+                .embeddingModel(embeddingModel)
+                .dynamicFilter(sqlFilterBuilder::build) // LLM will generate the filter dynamically
+                .build();
+
+        final Assistant assistant = AiServices.builder(Assistant.class)
+                .chatModel(chatModel)               // It should use OpenAI LLM
+                .contentRetriever(contentRetriever)
+                .build();
+
+        final String question = "Recommend a good action movie from the 90s.";
+        final String answer = assistant.chat(question);
+
+        this.logger.info("Question: {}", question);
+        this.logger.info("Answer  : {}", answer);
 
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(exit());
