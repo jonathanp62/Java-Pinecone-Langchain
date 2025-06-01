@@ -197,6 +197,16 @@ tasks.register("metadatafilteringrag") {
 	finalizedBy("rag")
 }
 
+tasks.register("multipleretrieversrag") {
+	doFirst {
+		tasks.rag.configure {
+			systemProperty("app.operation", "multipleretrieversrag")
+		}
+	}
+
+	finalizedBy("rag")
+}
+
 tasks.register("naiverag") {
 	doFirst {
 		tasks.rag.configure {
