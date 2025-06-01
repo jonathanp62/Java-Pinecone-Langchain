@@ -236,3 +236,13 @@ tasks.register("rerankingrag") {
 
 	finalizedBy("rag")
 }
+
+tasks.register("skipretrievalrag") {
+	doFirst {
+		tasks.rag.configure {
+			systemProperty("app.operation", "skipretrievalrag")
+		}
+	}
+
+	finalizedBy("rag")
+}
