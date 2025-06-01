@@ -96,6 +96,9 @@ public final class Main implements Runnable {
             case "rerankingrag":
                 new RerankingRag().run();
                 break;
+            case "returnsourcesrag":
+                new ReturnSourcesRag().run();
+                break;
             case "skipretrievalrag":
                 new SkipRetrievalRag().run();
                 break;

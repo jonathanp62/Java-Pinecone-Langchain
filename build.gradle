@@ -247,6 +247,16 @@ tasks.register("rerankingrag") {
 	finalizedBy("rag")
 }
 
+tasks.register("returnsourcesrag") {
+	doFirst {
+		tasks.rag.configure {
+			systemProperty("app.operation", "returnsourcesrag")
+		}
+	}
+
+	finalizedBy("rag")
+}
+
 tasks.register("skipretrievalrag") {
 	doFirst {
 		tasks.rag.configure {
