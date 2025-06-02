@@ -102,6 +102,9 @@ public final class Main implements Runnable {
             case "skipretrievalrag":
                 new SkipRetrievalRag().run();
                 break;
+            case "websearchrag":
+                new WebSearchRag().run();
+                break;
             default:
                 this.logger.error("Unknown operation: {}", operation);
         }

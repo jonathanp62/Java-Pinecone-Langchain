@@ -59,6 +59,7 @@ ext {
 	rerankingModel = 'bge-reranker-v2-m3'
 	queryText = 'Tell me about famous persons in history and science'
 //	queryText = 'Tell me about famous monuments and historical structures'
+	tavilyApiKey = 'etc/tavily-api-key.txt'
 	useAssertions = '--enable-assertions'
 }
 
@@ -261,6 +262,17 @@ tasks.register("skipretrievalrag") {
 	doFirst {
 		tasks.rag.configure {
 			systemProperty("app.operation", "skipretrievalrag")
+		}
+	}
+
+	finalizedBy("rag")
+}
+
+tasks.register("websearchrag") {
+	doFirst {
+		tasks.rag.configure {
+			systemProperty("app.operation", "websearchrag")
+			systemProperty("app.tavilyApiKey", tavilyApiKey)
 		}
 	}
 

@@ -33,6 +33,7 @@ etc/cohere-api-key.txt
 etc/mongo-db-uri.txt
 etc/open-ai-api-key.txt
 etc/pinecone-api-key.txt
+etc/tavily-api-key.txt
 gradle/*
 !gradle/libs.versions.toml
 gradlew
