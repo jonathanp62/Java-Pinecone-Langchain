@@ -177,6 +177,7 @@ public final class RerankingRag implements Runnable, Rag {
         final ChatModel chatModel = OpenAiChatModel.builder()
                 .apiKey(openaiApiKey)
                 .modelName(GPT_4_1)
+                .logRequests(true)
                 .build();
 
         final ChatMemory chatMemory = MessageWindowChatMemory.withMaxMessages(2);

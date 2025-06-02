@@ -70,21 +70,19 @@ abstract class Operation {
     /// Returns the embedding store.
     ///
     /// @param  pineconeApiKey      java.lang.String
-    /// @param  embeddingModelName  java.lang.String
+    /// @param  embeddingModel      dev.langchain4j.model.embedding.EmbeddingModel
     /// @param  indexName           java.lang.String
     /// @param  namespace           java.lang.String
     /// @return                     dev.langchain4j.store.embedding.EmbeddingStore<dev.langchain4j.data.segment.TextSegment>
     protected EmbeddingStore<TextSegment> getEmbeddingStore(final String pineconeApiKey,
-                                               final String embeddingModelName,
+                                               final EmbeddingModel embeddingModel,
                                                final String indexName,
                                                final String namespace) {
         if (this.logger.isTraceEnabled()) {
-            this.logger.trace(entryWith(pineconeApiKey, embeddingModelName, indexName, namespace));
+            this.logger.trace(entryWith(pineconeApiKey, embeddingModel, indexName, namespace));
         }
 
         this.logger.info("Creating Pinecone embedding store");
-
-        final EmbeddingModel embeddingModel = this.getEmbeddingModel(embeddingModelName);
 
         final EmbeddingStore<TextSegment> embeddingStore = PineconeEmbeddingStore.builder()
                 .apiKey(pineconeApiKey)

@@ -99,14 +99,14 @@ final class Load extends Operation {
             this.logger.debug("Namespace         : {}", namespace);
             this.logger.debug("Pinecone Api Key  : {}", pineconeApiKey);}
 
+        final EmbeddingModel embeddingModel = this.getEmbeddingModel(embeddingModelName);
+
         final EmbeddingStore<TextSegment> embeddingStore = this.getEmbeddingStore(
                 this.getApiKey(pineconeApiKey).orElseThrow(() -> new IllegalStateException("Pinecone API key not found")),
-                embeddingModelName,
+                embeddingModel,
                 indexName,
                 namespace
         );
-
-        final EmbeddingModel embeddingModel = this.getEmbeddingModel(embeddingModelName);
 
         final List<TextDocument> textDocuments = this.createContent(mongoDbUri, mongoDbName, mongoDbCollection);
 

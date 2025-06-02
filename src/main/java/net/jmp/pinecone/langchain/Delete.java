@@ -30,6 +30,7 @@ package net.jmp.pinecone.langchain;
 
 import dev.langchain4j.data.segment.TextSegment;
 
+import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 
 import static net.jmp.util.logging.LoggerUtils.*;
@@ -71,9 +72,11 @@ final class Delete extends Operation {
             this.logger.debug("Pinecone Api Key: {}", pineconeApiKey);
         }
 
+        final EmbeddingModel embeddingModel = this.getEmbeddingModel(embeddingModelName);
+
         final EmbeddingStore<TextSegment> embeddingStore = this.getEmbeddingStore(
                 this.getApiKey(pineconeApiKey).orElseThrow(() -> new IllegalStateException("Pinecone API key not found")),
-                embeddingModelName,
+                embeddingModel,
                 indexName,
                 namespace
         );

@@ -80,14 +80,15 @@ final class Query extends Operation {
             this.logger.debug("Query Text      : {}", queryText);
         }
 
+        final EmbeddingModel embeddingModel = this.getEmbeddingModel(embeddingModelName);
+
         final EmbeddingStore<TextSegment> embeddingStore = this.getEmbeddingStore(
                 this.getApiKey(pineconeApiKey).orElseThrow(() -> new IllegalStateException("Pinecone API key not found")),
-                embeddingModelName,
+                embeddingModel,
                 indexName,
                 namespace
         );
 
-        final EmbeddingModel embeddingModel = this.getEmbeddingModel(embeddingModelName);
         final Embedding queryEmbedding = embeddingModel.embed(queryText).content();
 
         final EmbeddingSearchRequest searchRequest = EmbeddingSearchRequest.builder()

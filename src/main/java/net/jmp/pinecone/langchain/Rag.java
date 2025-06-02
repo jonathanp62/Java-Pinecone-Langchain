@@ -31,6 +31,8 @@ package net.jmp.pinecone.langchain;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.data.segment.TextSegment;
 
+import dev.langchain4j.memory.ChatMemory;
+
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 
 import dev.langchain4j.model.chat.ChatModel;
@@ -107,14 +109,14 @@ final class Rag extends Operation {
             this.logger.debug("Query Text      : {}", queryText);
         }
 
+        final EmbeddingModel embeddingModel = this.getEmbeddingModel(embeddingModelName);
+
         final EmbeddingStore<TextSegment> embeddingStore = this.getEmbeddingStore(
                 this.getApiKey(pineconeApiKey).orElseThrow(() -> new IllegalStateException("Pinecone API key not found")),
-                embeddingModelName,
+                embeddingModel,
                 indexName,
                 namespace
         );
-
-        final EmbeddingModel embeddingModel = this.getEmbeddingModel(embeddingModelName);
 
         final ContentRetriever contentRetriever = EmbeddingStoreContentRetriever.builder()
                 .embeddingStore(embeddingStore)
@@ -146,13 +148,17 @@ final class Rag extends Operation {
             this.logger.debug("Augmented contents    : {}", augmentationResult.contents());
         }
 
+        final ChatMemory chatMemory = MessageWindowChatMemory.withMaxMessages(2);
+
         final ChatModel model = OpenAiChatModel.builder()
                 .apiKey(this.getApiKey(openaiApiKey).orElseThrow(() -> new IllegalStateException("Unable to get OpenAI API key")))
                 .modelName(GPT_4_1)
+                .logRequests(true)
                 .build();
 
         final Assistant assistant = AiServices.builder(Assistant.class)
                 .chatModel(model)
+                .chatMemory(chatMemory)
                 .retrievalAugmentor(retrievalAugmentor)
                 .chatMemory(MessageWindowChatMemory.withMaxMessages(10))
                 .build();
