@@ -35,13 +35,13 @@ import dev.langchain4j.memory.ChatMemory;
 
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 
-import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 
 import dev.langchain4j.model.cohere.CohereScoringModel;
 
 import dev.langchain4j.model.embedding.EmbeddingModel;
 
-import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 
 import static dev.langchain4j.model.openai.OpenAiChatModelName.GPT_4_1;
 
@@ -61,8 +61,11 @@ import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.rag.query.Metadata;
 
 import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.TokenStream;
 
 import dev.langchain4j.store.embedding.EmbeddingStore;
+
+import java.util.concurrent.CompletableFuture;
 
 import static net.jmp.util.logging.LoggerUtils.*;
 
@@ -149,20 +152,46 @@ final class Rag extends Operation {
 
         final ChatMemory chatMemory = MessageWindowChatMemory.withMaxMessages(10);
 
-        final ChatModel model = OpenAiChatModel.builder()
+        final StreamingChatModel model = OpenAiStreamingChatModel.builder()
                 .apiKey(this.getApiKey(openaiApiKey).orElseThrow(() -> new IllegalStateException("Unable to get OpenAI API key")))
                 .modelName(GPT_4_1)
                 .logRequests(true)
                 .build();
 
         final Assistant assistant = AiServices.builder(Assistant.class)
-                .chatModel(model)
+                .streamingChatModel(model)
                 .chatMemory(chatMemory)
                 .retrievalAugmentor(retrievalAugmentor)
                 .build();
 
-        if (this.logger.isInfoEnabled()) {
-            this.logger.info(assistant.chat(queryText));
+        final CompletableFuture<Void> completionFuture = new CompletableFuture<>();
+        final TokenStream tokenStream = assistant.chat(queryText);
+        final StringBuilder sb = new StringBuilder();
+        
+        tokenStream.onPartialResponse(token -> {
+                    sb.append(token);
+
+                    if (token.endsWith("\n")) {
+                        System.out.println(sb);
+                        sb.setLength(0);
+                    }
+                })
+                .onCompleteResponse(response -> {
+                    logger.info("Streaming completed");
+                    completionFuture.complete(null);
+                })
+                .onError(error -> {
+                    logger.error(error.getMessage());
+                    completionFuture.completeExceptionally(error);
+                })
+                .start();
+
+        try {
+            completionFuture.join(); // Wait for the stream to complete or fail
+
+            this.logger.info("Completed waiting for token streaming to complete");
+        } catch (final Exception e) {
+            this.logger.error("Token streaming failed", e);
         }
 
         if (this.logger.isTraceEnabled()) {
@@ -175,7 +204,7 @@ final class Rag extends Operation {
         /// The chat method.
         ///
         /// @param  message  java.lang.String
-        /// @return          java.lang.String
-        String chat(String message);
+        /// @return          dev.langchain4j.service.TokenStream
+        TokenStream chat(String message);
     }
 }
