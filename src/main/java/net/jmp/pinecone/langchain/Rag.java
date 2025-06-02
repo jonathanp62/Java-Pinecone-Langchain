@@ -131,7 +131,6 @@ final class Rag extends Operation {
 
         final ContentAggregator contentAggregator = ReRankingContentAggregator.builder()
                 .scoringModel(scoringModel)
-                .minScore(0.63)
                 .build();
 
         final RetrievalAugmentor retrievalAugmentor = DefaultRetrievalAugmentor.builder()
