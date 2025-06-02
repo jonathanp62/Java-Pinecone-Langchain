@@ -41,7 +41,7 @@
         <appender-ref ref="MAIN" />
     </logger>
 
-    <logger name="net.jmp.pinecone.langchain.examples.rag" additivity="false" level="debug">
+    <logger name="net.jmp.pinecone.langchain.examples.rag" additivity="false" level="info">
         <appender-ref ref="MAIN" />
     </logger>
 

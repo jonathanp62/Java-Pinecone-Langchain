@@ -147,7 +147,7 @@ final class Rag extends Operation {
             this.logger.debug("Augmented contents    : {}", augmentationResult.contents());
         }
 
-        final ChatMemory chatMemory = MessageWindowChatMemory.withMaxMessages(2);
+        final ChatMemory chatMemory = MessageWindowChatMemory.withMaxMessages(10);
 
         final ChatModel model = OpenAiChatModel.builder()
                 .apiKey(this.getApiKey(openaiApiKey).orElseThrow(() -> new IllegalStateException("Unable to get OpenAI API key")))
@@ -159,7 +159,6 @@ final class Rag extends Operation {
                 .chatModel(model)
                 .chatMemory(chatMemory)
                 .retrievalAugmentor(retrievalAugmentor)
-                .chatMemory(MessageWindowChatMemory.withMaxMessages(10))
                 .build();
 
         if (this.logger.isInfoEnabled()) {
