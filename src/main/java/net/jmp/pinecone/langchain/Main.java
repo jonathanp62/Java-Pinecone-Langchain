@@ -81,8 +81,11 @@ public final class Main implements Runnable {
             case "naiverag":
                 new NaiveRag().run();
                 break;
-            case "query":
-                new Query().operate();
+            case "query-filtered":
+                new Query(true).operate();
+                break;
+            case "query-unfiltered":
+                new Query(false).operate();
                 break;
             case "querycompressionrag":
                 new QueryCompressionRag().run();

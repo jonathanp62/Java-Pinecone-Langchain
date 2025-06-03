@@ -39,6 +39,10 @@ import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 
+import dev.langchain4j.store.embedding.filter.Filter;
+
+import static dev.langchain4j.store.embedding.filter.MetadataFilterBuilder.metadataKey;
+
 import static net.jmp.util.logging.LoggerUtils.*;
 
 import org.slf4j.Logger;
@@ -52,9 +56,16 @@ final class Query extends Operation {
     /// The logger.
     private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
-    /// The default constructor.
-    Query() {
+    /// True when the query should use a filter.
+    private final boolean queryUsesFilter;
+
+    /// The constructor.
+    ///
+    /// @param queryUsesFilter  boolean
+    Query(final boolean queryUsesFilter) {
         super();
+
+        this.queryUsesFilter = queryUsesFilter;
     }
 
     /// The operate method.
@@ -71,6 +82,7 @@ final class Query extends Operation {
         final String queryText = System.getProperty("app.queryText");
 
         this.logger.info("Querying Pinecone Index: {}", indexName);
+        this.logger.info("Query using a filter   : {}", this.queryUsesFilter);
 
         if (this.logger.isDebugEnabled()) {
             this.logger.debug("Embedding Model : {}", embeddingModelName);
@@ -91,11 +103,17 @@ final class Query extends Operation {
 
         final Embedding queryEmbedding = embeddingModel.embed(queryText).content();
 
-        final EmbeddingSearchRequest searchRequest = EmbeddingSearchRequest.builder()
+        final EmbeddingSearchRequest.EmbeddingSearchRequestBuilder builder = EmbeddingSearchRequest.builder()
                 .queryEmbedding(queryEmbedding)
-                .maxResults(10)
-                .build();
+                .maxResults(10);
 
+        if (this.queryUsesFilter) {
+            final Filter filter = metadataKey("category").isIn("history", "science");
+
+            builder.filter(filter);
+        }
+
+        final EmbeddingSearchRequest searchRequest = builder.build();
         final EmbeddingSearchResult<TextSegment> searchResult = embeddingStore.search(searchRequest);
 
         for (final EmbeddingMatch<TextSegment> match : searchResult.matches()) {

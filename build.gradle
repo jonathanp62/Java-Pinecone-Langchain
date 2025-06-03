@@ -57,8 +57,8 @@ ext {
 	project.version = '0.1.0'
 	project.description = 'to demonstrate Pinecone using LangChain.'
 	rerankingModel = 'bge-reranker-v2-m3'
-	queryText = 'Tell me about famous persons in history and science'
-//	queryText = 'Tell me about famous monuments and historical structures'
+	queryTextForFilter = 'Tell me about famous persons in history and science'
+	queryTextNoFilter = 'Tell me about famous monuments and historical structures'
 	tavilyApiKey = 'etc/tavily-api-key.txt'
 	useAssertions = '--enable-assertions'
 }
@@ -136,15 +136,30 @@ tasks.register('load', JavaExec) {
 	mainClass = javaMainClass
 }
 
-tasks.register('query', JavaExec) {
+tasks.register('query-filtered', JavaExec) {
 	allJvmArgs = [useAssertions, enableNativeAccess] as List<String>
 	systemProperties(
 			['app.embeddingModel': embeddingModel,
 			 'app.indexName': indexName,
 			 'app.namespace': namespace,
 			 'app.pineconeApiKey': pineconeApiKey,
-			 'app.queryText': queryText,
-			 'app.operation': 'query']
+			 'app.queryText': queryTextForFilter,
+			 'app.operation': 'query-filtered']
+	)
+	classpath = sourceSets.main.runtimeClasspath
+	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+	mainClass = javaMainClass
+}
+
+tasks.register('query-unfiltered', JavaExec) {
+	allJvmArgs = [useAssertions, enableNativeAccess] as List<String>
+	systemProperties(
+			['app.embeddingModel': embeddingModel,
+			 'app.indexName': indexName,
+			 'app.namespace': namespace,
+			 'app.pineconeApiKey': pineconeApiKey,
+			 'app.queryText': queryTextNoFilter,
+			 'app.operation': 'query-unfiltered']
 	)
 	classpath = sourceSets.main.runtimeClasspath
 	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
@@ -160,7 +175,7 @@ tasks.register('rag', JavaExec) {
 			 'app.namespace': namespace,
 			 'app.openaiApiKey': openaiApiKey,
 			 'app.pineconeApiKey': pineconeApiKey,
-			 'app.queryText': queryText,
+			 'app.queryText': queryTextForFilter,
 			 'app.operation': 'rag']
 	)
 	classpath = sourceSets.main.runtimeClasspath
