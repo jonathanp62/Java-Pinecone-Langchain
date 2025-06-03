@@ -168,6 +168,19 @@ tasks.register('rag', JavaExec) {
 	mainClass = javaMainClass
 }
 
+tasks.register('structuredoutput', JavaExec) {
+	allJvmArgs = [useAssertions, enableNativeAccess] as List<String>
+	systemProperties(
+			['app.openaiApiKey': openaiApiKey,
+			 'app.operation': 'structuredoutput']
+	)
+	classpath = sourceSets.main.runtimeClasspath
+	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+	mainClass = javaMainClass
+}
+
+// RAG tasks
+
 tasks.register("easyrag") {
 	doFirst {
 		tasks.rag.configure {

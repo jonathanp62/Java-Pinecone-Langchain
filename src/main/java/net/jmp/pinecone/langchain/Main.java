@@ -102,6 +102,9 @@ public final class Main implements Runnable {
             case "skipretrievalrag":
                 new SkipRetrievalRag().run();
                 break;
+            case "structuredoutput":
+                new StructuredOutput().operate();
+                break;
             case "websearchrag":
                 new WebSearchRag().run();
                 break;
