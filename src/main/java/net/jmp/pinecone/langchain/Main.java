@@ -66,6 +66,9 @@ public final class Main implements Runnable {
             case "easyrag":
                 new EasyRag().run();
                 break;
+            case "hybridquery":
+                new HybridQuery().operate();
+                break;
             case "load":
                 new Load().operate();
                 break;

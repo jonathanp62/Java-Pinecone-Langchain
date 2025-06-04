@@ -58,6 +58,7 @@ ext {
 	project.description = 'to demonstrate Pinecone using LangChain.'
 	rerankingModel = 'bge-reranker-v2-m3'
 	queryTextForFilter = 'Tell me about famous persons in history and science'
+	queryTextForHybrid = 'Tell me about the physics of light'
 	queryTextNoFilter = 'Tell me about famous monuments and historical structures'
 	tavilyApiKey = 'etc/tavily-api-key.txt'
 	useAssertions = '--enable-assertions'
@@ -113,6 +114,23 @@ tasks.register('delete', JavaExec) {
 			 'app.namespace': namespace,
 			 'app.pineconeApiKey': pineconeApiKey,
 			 'app.operation': 'delete']
+	)
+	classpath = sourceSets.main.runtimeClasspath
+	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+	mainClass = javaMainClass
+}
+
+tasks.register('hybridquery', JavaExec) {
+	allJvmArgs = [useAssertions, enableNativeAccess] as List<String>
+	systemProperties(
+			['app.cohereApiKey': cohereApiKey,
+			 'app.embeddingModel': embeddingModel,
+			 'app.indexName': indexName,
+			 'app.namespace': namespace,
+			 'app.openaiApiKey': openaiApiKey,
+			 'app.pineconeApiKey': pineconeApiKey,
+			 'app.queryText': queryTextForHybrid,
+			 'app.operation': 'hybridquery']
 	)
 	classpath = sourceSets.main.runtimeClasspath
 	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
