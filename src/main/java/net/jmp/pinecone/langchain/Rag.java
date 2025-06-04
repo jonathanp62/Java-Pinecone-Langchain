@@ -155,6 +155,7 @@ final class Rag extends Operation {
         final StreamingChatModel model = OpenAiStreamingChatModel.builder()
                 .apiKey(this.getApiKey(openaiApiKey).orElseThrow(() -> new IllegalStateException("Unable to get OpenAI API key")))
                 .modelName(GPT_4_1)
+                .temperature(0.4)
                 .logRequests(true)
                 .build();
 

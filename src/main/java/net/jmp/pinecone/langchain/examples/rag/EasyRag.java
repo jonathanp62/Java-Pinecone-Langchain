@@ -124,6 +124,7 @@ public final class EasyRag implements Runnable, Rag {
         final ChatModel chatModel = OpenAiChatModel.builder()
                 .apiKey(openaiApiKey)
                 .modelName(GPT_4_1)
+                .temperature(0.4)
                 .build();
 
         // Create an assistant that has access to our documents

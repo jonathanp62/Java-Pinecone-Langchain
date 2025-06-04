@@ -144,6 +144,7 @@ public final class QueryCompressionRag implements Runnable, Rag {
         final ChatModel chatModel = OpenAiChatModel.builder()
                 .apiKey(openaiApiKey)
                 .modelName(GPT_4_1)
+                .temperature(0.4)
                 .build();
 
         /*
