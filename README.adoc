@@ -1,7 +1,7 @@
 Pinecone-LangChain
 ------------------
 
-A demonstration of Pinecone using LangChain.
+A demonstration of Pinecone using LangChain4J.
 
 Things I need
 ~~~~~~~~~~~~
