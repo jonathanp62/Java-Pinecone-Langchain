@@ -30,7 +30,6 @@
 
 /*
  * The following system property must be set in HOME/.gradle/gradle.properties:
- *   systemProp.macosArchitecture=intel -or-
  *   systemProp.macosArchitecture=silicon
  */
 
@@ -57,9 +56,6 @@ ext {
 	project.version = '0.1.0'
 	project.description = 'to demonstrate Pinecone using LangChain.'
 	rerankingModel = 'bge-reranker-v2-m3'
-	queryTextForFilter = 'Tell me about famous persons in history and science'
-	queryTextForHybrid = 'Tell me about the physics of light'
-	queryTextNoFilter = 'Tell me about famous monuments and historical structures'
 	tavilyApiKey = 'etc/tavily-api-key.txt'
 	useAssertions = '--enable-assertions'
 }
@@ -102,114 +98,80 @@ tasks.withType(Javadoc).configureEach {
     sjdo.version(true)
 }
 
+tasks.withType(JavaExec).configureEach {
+	jvmArgs = [
+			   "-Xmx8192m",
+			   "--enable-native-access=ALL-UNNAMED",
+			   "--sun-misc-unsafe-memory-access=allow",	// Stop the JVM from complaining about Netty
+			   "-ea"
+	]
+
+	println()
+	println("JVM Arguments: " + jvmArgs)
+
+	systemProperties(
+			[
+			 'app.cohereApiKey': cohereApiKey,
+			 'app.embeddingModel': embeddingModel,
+			 'app.indexName': indexName,
+			 'app.mongoDbCollection': mongoDbCollection,
+			 'app.mongoDbName': mongoDbName,
+			 'app.mongoDbUri': mongoDbUri,
+			 'app.namespace': namespace,
+			 'app.openaiApiKey': openaiApiKey,
+			 'app.pineconeApiKey': pineconeApiKey,
+			 'app.rerankingModel': rerankingModel,
+			 'app.tavilyApiKey': tavilyApiKey
+			]
+	)
+
+	classpath = sourceSets.main.runtimeClasspath
+	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+	mainClass = javaMainClass
+}
+
 /*
  * Execute with - gradle execute instead of gradle run
  */
 
 tasks.register('delete', JavaExec) {
-	allJvmArgs = [useAssertions, enableNativeAccess] as List<String>
-	systemProperties(
-			['app.embeddingModel': embeddingModel,
-			 'app.indexName': indexName,
-			 'app.namespace': namespace,
-			 'app.pineconeApiKey': pineconeApiKey,
-			 'app.operation': 'delete']
-	)
-	classpath = sourceSets.main.runtimeClasspath
-	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
-	mainClass = javaMainClass
+	getSystemProperties().put('app.operation', 'delete')
 }
 
 tasks.register('hybridquery', JavaExec) {
-	allJvmArgs = [useAssertions, enableNativeAccess] as List<String>
-	systemProperties(
-			['app.cohereApiKey': cohereApiKey,
-			 'app.embeddingModel': embeddingModel,
-			 'app.indexName': indexName,
-			 'app.namespace': namespace,
-			 'app.openaiApiKey': openaiApiKey,
-			 'app.pineconeApiKey': pineconeApiKey,
-			 'app.queryText': queryTextForHybrid,
-			 'app.operation': 'hybridquery']
-	)
-	classpath = sourceSets.main.runtimeClasspath
-	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
-	mainClass = javaMainClass
+	var sysProps = getSystemProperties()
+
+	sysProps.put('app.operation', 'hybridquery')
+	sysProps.put('app.queryText', 'Tell me about the physics of light')
 }
 
 tasks.register('load', JavaExec) {
-	allJvmArgs = [useAssertions, enableNativeAccess] as List<String>
-	systemProperties(
-			['app.embeddingModel': embeddingModel,
-			 'app.indexName': indexName,
-        	 'app.mongoDbCollection': mongoDbCollection,
-			 'app.mongoDbName': mongoDbName,
-			 'app.mongoDbUri': mongoDbUri,
-			 'app.namespace': namespace,
-			 'app.pineconeApiKey': pineconeApiKey,
-			 'app.operation': 'load']
-	)
-	classpath = sourceSets.main.runtimeClasspath
-	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
-	mainClass = javaMainClass
+	getSystemProperties().put('app.operation', 'load')
 }
 
 tasks.register('query-filtered', JavaExec) {
-	allJvmArgs = [useAssertions, enableNativeAccess] as List<String>
-	systemProperties(
-			['app.embeddingModel': embeddingModel,
-			 'app.indexName': indexName,
-			 'app.namespace': namespace,
-			 'app.pineconeApiKey': pineconeApiKey,
-			 'app.queryText': queryTextForFilter,
-			 'app.operation': 'query-filtered']
-	)
-	classpath = sourceSets.main.runtimeClasspath
-	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
-	mainClass = javaMainClass
+	var sysProps = getSystemProperties()
+
+	sysProps.put('app.operation', 'query-filtered')
+	sysProps.put('app.queryText', 'Tell me about famous persons in history and science')
 }
 
 tasks.register('query-unfiltered', JavaExec) {
-	allJvmArgs = [useAssertions, enableNativeAccess] as List<String>
-	systemProperties(
-			['app.embeddingModel': embeddingModel,
-			 'app.indexName': indexName,
-			 'app.namespace': namespace,
-			 'app.pineconeApiKey': pineconeApiKey,
-			 'app.queryText': queryTextNoFilter,
-			 'app.operation': 'query-unfiltered']
-	)
-	classpath = sourceSets.main.runtimeClasspath
-	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
-	mainClass = javaMainClass
+	var sysProps = getSystemProperties()
+
+	sysProps.put('app.operation', 'query-unfiltered')
+	sysProps.put('app.queryText', 'Tell me about famous monuments and historical structures')
 }
 
 tasks.register('rag', JavaExec) {
-	allJvmArgs = [useAssertions, enableNativeAccess] as List<String>
-	systemProperties(
-			['app.cohereApiKey': cohereApiKey,
-			 'app.embeddingModel': embeddingModel,
-			 'app.indexName': indexName,
-			 'app.namespace': namespace,
-			 'app.openaiApiKey': openaiApiKey,
-			 'app.pineconeApiKey': pineconeApiKey,
-			 'app.queryText': queryTextForFilter,
-			 'app.operation': 'rag']
-	)
-	classpath = sourceSets.main.runtimeClasspath
-	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
-	mainClass = javaMainClass
+	var sysProps = getSystemProperties()
+
+	sysProps.put('app.operation', 'rag')
+	sysProps.put('app.queryText', 'Tell me about famous persons in history and science')
 }
 
 tasks.register('structuredoutput', JavaExec) {
-	allJvmArgs = [useAssertions, enableNativeAccess] as List<String>
-	systemProperties(
-			['app.openaiApiKey': openaiApiKey,
-			 'app.operation': 'structuredoutput']
-	)
-	classpath = sourceSets.main.runtimeClasspath
-	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
-	mainClass = javaMainClass
+	getSystemProperties().put('app.operation', 'structuredoutput')
 }
 
 // RAG tasks
