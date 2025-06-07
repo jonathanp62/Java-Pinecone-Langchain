@@ -13,6 +13,7 @@ Things I need
 ** Categories
 ** Quickstart
 * An OpenAI API key
+* A Tavily API key
 
 Loading Data from the Pinecone QuickStart Application
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
